@@ -1,0 +1,3 @@
+de:
+  Atwx\SharedLogin\OAuth\ExistingMemberLoginHandler:
+    NO_ACCOUNT: 'Für diese E-Mail-Adresse gibt es kein Konto. Bitte lass dich von der Inhaberin oder dem Inhaber deiner Organisation hinzufügen.'

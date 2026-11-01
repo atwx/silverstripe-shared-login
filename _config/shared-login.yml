@@ -1,0 +1,96 @@
+---
+Name: atwx-shared-login
+---
+# Strict would keep the session cookie off an OAuth provider's redirect back
+# to /oauth/callback, and the sign-in state could not be checked. Lax still
+# keeps it off cross-site requests other than top-level navigation.
+SilverStripe\Control\Session:
+  cookie_samesite: 'Lax'
+
+# Subdomains of the shared cookie domain count as this site (no-op without one).
+SilverStripe\Control\Director:
+  extensions:
+    - Atwx\SharedLogin\Extension\SharedDomainSiteUrlExtension
+---
+Name: atwx-shared-login-middleware
+After:
+  - '#coresecurity'
+---
+# Drops host-only session cookies left from before the shared cookie domain was set.
+SilverStripe\Core\Injector\Injector:
+  SilverStripe\Control\Director:
+    properties:
+      Middlewares:
+        SharedLoginSessionCookieCleanup: '%$Atwx\SharedLogin\Middleware\SessionCookieCleanupMiddleware'
+---
+Name: atwx-shared-login-oauth
+After:
+  - '#oauthcontroller'
+Only:
+  classexists: 'Bigfork\SilverStripeOAuth\Client\Control\Controller'
+---
+# External sign-in only for existing members; back to the starting subdomain.
+Bigfork\SilverStripeOAuth\Client\Control\Controller:
+  token_handlers:
+    loginhandler:
+      class: Atwx\SharedLogin\OAuth\ExistingMemberLoginHandler
+SilverStripe\Core\Injector\Injector:
+  Bigfork\SilverStripeOAuth\Client\Control\Controller:
+    class: Atwx\SharedLogin\OAuth\OAuthController
+---
+Name: atwx-shared-login-oauth-reset
+After:
+  - '#oauthauthenticator'
+Only:
+  classexists: 'Bigfork\SilverStripeOAuth\Client\Authenticator\Authenticator'
+---
+# The OAuth module always adds its authenticator; offer it only with a provider (below).
+SilverStripe\Core\Injector\Injector:
+  SilverStripe\Security\Security:
+    properties:
+      Authenticators: null
+---
+Name: atwx-shared-login-oauth-default
+After:
+  - '#atwx-shared-login-oauth-reset'
+Only:
+  classexists: 'Bigfork\SilverStripeOAuth\Client\Authenticator\Authenticator'
+---
+SilverStripe\Core\Injector\Injector:
+  SilverStripe\Security\Security:
+    properties:
+      Authenticators:
+        default: '%$SilverStripe\Security\MemberAuthenticator\MemberAuthenticator'
+---
+Name: atwx-shared-login-google
+After:
+  - '#atwx-shared-login-oauth-default'
+Only:
+  classexists:
+    - 'Bigfork\SilverStripeOAuth\Client\Authenticator\Authenticator'
+    - 'League\OAuth2\Client\Provider\Google'
+  envvarset:
+    - GOOGLE_CLIENT_ID
+    - GOOGLE_CLIENT_SECRET
+---
+# "Sign in with Google" when the credentials are set in the environment.
+SilverStripe\Core\Injector\Injector:
+  SilverStripe\Security\Security:
+    properties:
+      Authenticators:
+        oauth: '%$Bigfork\SilverStripeOAuth\Client\Authenticator\Authenticator'
+  Bigfork\SilverStripeOAuth\Client\Factory\ProviderFactory:
+    properties:
+      providers:
+        'Google': '%$GoogleProvider'
+  GoogleProvider:
+    class: League\OAuth2\Client\Provider\Google
+    constructor:
+      Options:
+        clientId: '`GOOGLE_CLIENT_ID`'
+        clientSecret: '`GOOGLE_CLIENT_SECRET`'
+Bigfork\SilverStripeOAuth\Client\Authenticator\Authenticator:
+  providers:
+    'Google':
+      name: 'Google'
+      scopes: ['openid', 'email', 'profile']
