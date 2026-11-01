@@ -11,10 +11,10 @@
     ],
     "require": {
         "php": "^8.3",
-        "silverstripe/framework": "^6"
+        "silverstripe/framework": "^6",
+        "bigfork/silverstripe-oauth-login": "^3"
     },
     "suggest": {
-        "bigfork/silverstripe-oauth-login": "Sign in with external providers",
         "league/oauth2-google": "Sign in with Google"
     },
     "autoload": {

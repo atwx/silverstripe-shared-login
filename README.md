@@ -10,7 +10,7 @@ organisation/tenant):
 - **Central login host:** external providers call back on one host only
   (e.g. `https://login.example.org/oauth/callback/`); afterwards people land on
   the subdomain they started from.
-- **External sign-in for existing members only** (with
+- **External sign-in for existing members only** (built on
   [`bigfork/silverstripe-oauth-login`](https://github.com/bigfork/silverstripe-oauth-login)):
   the provider's verified email must belong to a member, who is then linked to
   the provider account. Nobody gets an account by signing in.
