@@ -77,4 +77,15 @@ class SharedLoginTest extends SapphireTest
     {
         $this->assertTrue(ExistingMemberLoginHandler::config()->get('remember_login'));
     }
+
+    public function testReadsASingleSessionCookie(): void
+    {
+        $name = session_name() ?: 'PHPSESSID';
+        $request = new HTTPRequest('GET', '/');
+        $request->addHeader('Cookie', "foo=bar; {$name}=abc123");
+        $this->assertSame('abc123', SessionCookieCleanupMiddleware::sessionCookie($request));
+        $request = new HTTPRequest('GET', '/');
+        $request->addHeader('Cookie', "{$name}=a; {$name}=b");
+        $this->assertNull(SessionCookieCleanupMiddleware::sessionCookie($request), 'duplicates are handled apart');
+    }
 }
