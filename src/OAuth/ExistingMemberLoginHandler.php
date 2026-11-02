@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace Atwx\SharedLogin\OAuth;
 
 use Bigfork\SilverStripeOAuth\Client\Handler\LoginTokenHandler;
+use SilverStripe\Control\Controller;
+use SilverStripe\Core\Config\Configurable;
+use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Security\IdentityStore;
 use Bigfork\SilverStripeOAuth\Client\Model\Passport;
 use League\OAuth2\Client\Provider\AbstractProvider;
 use League\OAuth2\Client\Token\AccessToken;
@@ -16,9 +20,17 @@ use SilverStripe\Security\Security;
  * provider's verified email must belong to a member, who is then linked to
  * that provider account (a "passport") for the next time. Nobody gets an
  * account by signing in.
+ *
+ * The login is persistent ("keep me signed in") unless remember_login is
+ * off: people stay signed in with the provider anyway, so asking them again
+ * every day only costs a click and confuses.
  */
 class ExistingMemberLoginHandler extends LoginTokenHandler
 {
+    use Configurable;
+
+    private static bool $remember_login = true;
+
     public function handleToken(AccessToken $token, AbstractProvider $provider)
     {
         $member = $this->findMember($token, $provider);
@@ -28,7 +40,14 @@ class ExistingMemberLoginHandler extends LoginTokenHandler
                 'There is no account for this email address. Ask the owner of your organisation to add you.'
             ));
         }
-        return parent::handleToken($token, $provider);
+        $result = $member->validateCanLogin();
+        if (!$result->isValid()) {
+            return Security::permissionFailure(null, implode('; ', array_column($result->getMessages(), 'message')));
+        }
+        $request = Controller::curr()?->getRequest();
+        Injector::inst()->get(IdentityStore::class)
+            ->logIn($member, (bool) static::config()->get('remember_login'), $request);
+        return null;
     }
 
     protected function findOrCreateMember(AccessToken $token, AbstractProvider $provider)

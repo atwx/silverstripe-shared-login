@@ -12,6 +12,16 @@ SilverStripe\Control\Director:
   extensions:
     - Atwx\SharedLogin\Extension\SharedDomainSiteUrlExtension
 ---
+Name: atwx-shared-login-cookies
+After:
+  - '#cookie'
+---
+# Cookies without an explicit domain (e.g. "keep me signed in") follow the
+# session to the shared cookie domain (no-op without one).
+SilverStripe\Core\Injector\Injector:
+  SilverStripe\Control\Cookie_Backend:
+    class: Atwx\SharedLogin\Control\SharedDomainCookieJar
+---
 Name: atwx-shared-login-middleware
 After:
   - '#coresecurity'

@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Atwx\SharedLogin\Tests;
 
+use Atwx\SharedLogin\Control\SharedDomainCookieJar;
 use Atwx\SharedLogin\Middleware\SessionCookieCleanupMiddleware;
 use Atwx\SharedLogin\SharedLogin;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPRequest;
+use SilverStripe\Control\Cookie_Backend;
 use SilverStripe\Control\Session;
+use SilverStripe\Core\Injector\Injector;
+use Atwx\SharedLogin\OAuth\ExistingMemberLoginHandler;
 use SilverStripe\Core\Environment;
 use SilverStripe\Dev\SapphireTest;
 
@@ -54,5 +58,23 @@ class SharedLoginTest extends SapphireTest
         $request = new HTTPRequest('GET', '/');
         $request->addHeader('Cookie', "X{$name}=a; {$name}=new");
         $this->assertFalse(SessionCookieCleanupMiddleware::hasDuplicate($request));
+    }
+
+    public function testCookiesFollowTheSharedDomain(): void
+    {
+        $this->assertSame(
+            SharedDomainCookieJar::class,
+            \SilverStripe\Core\Config\Config::inst()->get(Injector::class, Cookie_Backend::class)['class']
+        );
+        Environment::setEnv($this->env, '');
+        $this->assertNull(SharedDomainCookieJar::domainFor(null));
+        Environment::setEnv($this->env, '.example.org');
+        $this->assertSame('.example.org', SharedDomainCookieJar::domainFor(null));
+        $this->assertSame('a.example.org', SharedDomainCookieJar::domainFor('a.example.org'), 'explicit domains stay');
+    }
+
+    public function testExternalLoginsAreRemembered(): void
+    {
+        $this->assertTrue(ExistingMemberLoginHandler::config()->get('remember_login'));
     }
 }
