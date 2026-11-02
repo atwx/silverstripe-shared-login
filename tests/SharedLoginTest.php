@@ -88,4 +88,11 @@ class SharedLoginTest extends SapphireTest
         $request->addHeader('Cookie', "{$name}=a; {$name}=b");
         $this->assertNull(SessionCookieCleanupMiddleware::sessionCookie($request), 'duplicates are handled apart');
     }
+
+    public function testAChangedSessionIdIsNotOverwrittenWithTheOldOne(): void
+    {
+        $this->assertTrue(SessionCookieCleanupMiddleware::shouldResend('abc', 'abc'));
+        $this->assertFalse(SessionCookieCleanupMiddleware::shouldResend('abc', 'new-after-login'));
+        $this->assertFalse(SessionCookieCleanupMiddleware::shouldResend('', ''));
+    }
 }

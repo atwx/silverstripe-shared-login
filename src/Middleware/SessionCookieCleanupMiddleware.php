@@ -24,6 +24,10 @@ use SilverStripe\Core\Config\Config;
  * session already exists), so the session cookie is sent once more with the
  * shared domain, same value. The next request then carries both, and the
  * host-only one is expired as above.
+ *
+ * Only while the session keeps its ID: when it got a new one during the
+ * request (login, e.g. by "keep me signed in"), PHP has already sent the new
+ * cookie with the shared domain, and sending the old ID again would undo that.
  */
 class SessionCookieCleanupMiddleware implements HTTPMiddleware
 {
@@ -44,11 +48,22 @@ class SessionCookieCleanupMiddleware implements HTTPMiddleware
         } elseif ($request->hasSession() && ($id = static::sessionCookie($request)) !== null) {
             $session = $request->getSession();
             if ($session->isStarted() && $session->get(self::SESSION_KEY) !== $domain) {
-                static::resendWithDomain($request, $id, $domain);
+                if (static::shouldResend($id, (string) session_id())) {
+                    static::resendWithDomain($request, $id, $domain);
+                }
                 $session->set(self::SESSION_KEY, $domain);
             }
         }
         return $response;
+    }
+
+    /**
+     * Whether the request's session cookie may be sent again with the shared
+     * domain: only if the session still has that ID.
+     */
+    public static function shouldResend(string $cookieId, string $currentId): bool
+    {
+        return $cookieId !== '' && $cookieId === $currentId;
     }
 
     /**
