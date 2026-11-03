@@ -1,3 +1,8 @@
 en:
+  Atwx\SharedLogin\OAuth\ConnectTokenHandler:
+    CONNECTED: 'Connected with {provider} ({email}). You can now sign in with it.'
+    SIGN_IN_FIRST: 'Please sign in first.'
   Atwx\SharedLogin\OAuth\ExistingMemberLoginHandler:
-    NO_ACCOUNT: 'There is no account for this email address. Ask the owner of your organisation to add you.'
+    NO_ACCOUNT: 'This account is not connected to a login. If you have one with another email address, sign in there and connect this account in your profile; otherwise ask your organisation for an invitation.'
+  Atwx\SharedLogin\OAuth\ExternalAccounts:
+    TAKEN: 'This {provider} account is already connected to another account.'

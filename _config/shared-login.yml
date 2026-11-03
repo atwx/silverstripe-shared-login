@@ -44,6 +44,14 @@ Bigfork\SilverStripeOAuth\Client\Control\Controller:
   token_handlers:
     loginhandler:
       class: Atwx\SharedLogin\OAuth\ExistingMemberLoginHandler
+    # "Connect my Google account" from a signed-in account (ExternalAccounts::authoriseLink).
+    connecthandler:
+      priority: 1
+      context: connect
+      class: Atwx\SharedLogin\OAuth\ConnectTokenHandler
+Bigfork\SilverStripeOAuth\Client\Model\Passport:
+  extensions:
+    - Atwx\SharedLogin\Extension\PassportExtension
 SilverStripe\Core\Injector\Injector:
   Bigfork\SilverStripeOAuth\Client\Control\Controller:
     class: Atwx\SharedLogin\OAuth\OAuthController

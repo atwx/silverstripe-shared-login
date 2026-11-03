@@ -1,3 +1,8 @@
 de:
+  Atwx\SharedLogin\OAuth\ConnectTokenHandler:
+    CONNECTED: 'Mit {provider} verbunden ({email}). Du kannst dich jetzt darüber anmelden.'
+    SIGN_IN_FIRST: 'Bitte melde dich zuerst an.'
   Atwx\SharedLogin\OAuth\ExistingMemberLoginHandler:
-    NO_ACCOUNT: 'Für diese E-Mail-Adresse gibt es kein Konto. Bitte lass dich von der Inhaberin oder dem Inhaber deiner Organisation hinzufügen.'
+    NO_ACCOUNT: 'Dieses Konto ist mit keinem Login verbunden. Hast du einen mit einer anderen E-Mail-Adresse, melde dich dort an und verbinde dieses Konto in deinem Profil; sonst bitte deine Organisation um eine Einladung.'
+  Atwx\SharedLogin\OAuth\ExternalAccounts:
+    TAKEN: 'Dieses {provider}-Konto ist schon mit einem anderen Konto verbunden.'

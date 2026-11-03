@@ -12,8 +12,11 @@ organisation/tenant):
   the subdomain they started from.
 - **External sign-in for existing members only** (built on
   [`bigfork/silverstripe-oauth-login`](https://github.com/bigfork/silverstripe-oauth-login)):
-  the provider's verified email must belong to a member, who is then linked to
-  the provider account. Nobody gets an account by signing in.
+  the provider account must be linked to a member, or its verified email must
+  belong to one (then it is linked). Nobody gets an account by signing in.
+- **Connect an external account:** signed-in members link a provider account
+  with any email to their account (OAuth context `connect`); it signs them in
+  from then on. The passports remember provider and email for display.
 - **Google** out of the box when `league/oauth2-google` is installed and
   `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` are set; otherwise only the
   password form is offered.
@@ -46,3 +49,20 @@ list every host.
 Other providers work the same way: their league/oauth2 package plus a provider
 entry for `Bigfork\SilverStripeOAuth\Client\Factory\ProviderFactory` and
 `Bigfork\SilverStripeOAuth\Client\Authenticator\Authenticator`.
+
+## Connecting accounts
+
+```php
+use Atwx\SharedLogin\OAuth\ExternalAccounts;
+
+$accounts = ExternalAccounts::singleton();
+$accounts->providers();                       // ['Google']
+$accounts->authoriseLink('Google', ExternalAccounts::CONTEXT_CONNECT, $backUrl);
+$accounts->accountsOf($member);               // ID, Provider, Email
+$accounts->disconnect($member, $id);
+ExternalAccounts::popMessage($session);       // outcome of the last connect
+```
+
+Apps can add their own OAuth contexts (e.g. joining from an invitation) with a
+token handler that uses `ExternalIdentity::fromToken()` and
+`ExternalAccounts::memberFor()` / `link()`.
